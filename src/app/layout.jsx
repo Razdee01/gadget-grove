@@ -2,6 +2,7 @@ import { Geist, Geist_Mono, Poppins } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/layouts/Navbar";
 import Footer from "@/components/layouts/Footer";
+import NextAuthProvider from "@/provider/NextAuthProvider";
 
 const poppins=Poppins(
   {
@@ -16,18 +17,20 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className={`${poppins.className} antialiased`}>
-        <header className="py-2 md:w-11/12 mx-auto">
-          <Navbar></Navbar>
-        </header>
-        <main className="py-2 md:w-11/12 mx-auto min-h-[calc(100svh-453px)]">
-        {children}
-        </main>
-        <footer>
-          <Footer></Footer>
-        </footer>
-      </body>
-    </html>
+    <NextAuthProvider>
+      <html lang="en">
+        <body className={`${poppins.className} antialiased`}>
+          <header className="py-2 md:w-11/12 mx-auto">
+            <Navbar></Navbar>
+          </header>
+          <main className="py-2 md:w-11/12 mx-auto min-h-[calc(100svh-453px)]">
+            {children}
+          </main>
+          <footer>
+            <Footer></Footer>
+          </footer>
+        </body>
+      </html>
+    </NextAuthProvider>
   );
 }

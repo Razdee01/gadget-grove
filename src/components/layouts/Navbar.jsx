@@ -1,18 +1,28 @@
+"use client";
 import Link from "next/link";
 import NavLink from "../buttons/NavLink";
+import AuthButton from "../buttons/AuthButton";
+import { useSession } from "next-auth/react";
 
 const Navbar = () => {
+  const { status } = useSession();
+
   const navLinks = (
     <>
       <li>
         <NavLink href="/">Home</NavLink>
       </li>
       <li>
-        <NavLink href="/items">Items/Lists</NavLink>
+        <NavLink href="/items">Items</NavLink>
       </li>
-      <li>
-        <NavLink href="/add-item">Add Item</NavLink>
-      </li>
+
+     
+      {status === "authenticated" && (
+        <li>
+          <NavLink href="/add-item">Add Item</NavLink>
+        </li>
+      )}
+
       <li>
         <NavLink href="/contact">Contact</NavLink>
       </li>
@@ -25,7 +35,7 @@ const Navbar = () => {
   return (
     <div className="sticky top-0 z-50 w-full px-2 md:px-4 pt-4">
       <div className="navbar bg-base-200/90 backdrop-blur-md rounded-2xl border border-white/5 shadow-2xl px-4 md:px-6">
-        {/* MOBILE: Hamburger + Desktop: Logo */}
+        {/* Mobile Menu & Logo */}
         <div className="navbar-start">
           <div className="dropdown">
             <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
@@ -75,21 +85,16 @@ const Navbar = () => {
           </Link>
         </div>
 
-        {/* DESKTOP LINKS (Hidden on mobile) */}
+        {/* Desktop Links */}
         <div className="navbar-center hidden lg:flex">
           <ul className="menu menu-horizontal px-1 font-bold uppercase text-xs tracking-widest gap-2">
             {navLinks}
           </ul>
         </div>
 
-        {/* LOGIN BUTTON (Always on the right) */}
+        {/* Auth Button */}
         <div className="navbar-end">
-          <Link
-            href="/login"
-            className="btn btn-primary btn-sm md:btn-md rounded-xl font-black italic uppercase shadow-lg shadow-primary/20"
-          >
-            Login
-          </Link>
+          <AuthButton />
         </div>
       </div>
     </div>

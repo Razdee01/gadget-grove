@@ -1,59 +1,76 @@
 "use server";
 
 import { dbConnect } from "@/lib/dbConnect";
-import bcrypt from "bcryptjs"
+import bcrypt from "bcryptjs";
 
-// import { cookies } from "next/headers";
-// import { redirect } from "next/navigation";
+export const postUser = async (payload) => {
+  const { email, password, name } = payload;
 
-// export async function loginAction(formData) {
-//   const email = formData.get("email");
-//   const password = formData.get("password");
+  // 1. Validation
+  if (!email || !password || !name) return null;
 
-  
-//   if (email === "admin@gadget.com" && password === "admin123") {
-//     const cookieStore = await cookies();
+  try {
+    // 2. Connect and check existence
+    // Use the string "users" directly to avoid "Collection is undefined" errors
+    const collection = await dbConnect("users");
+    const isExist = await collection.findOne({ email });
 
-//     // Set a cookie to remember the session
-//     cookieStore.set("auth_token", "secure_mock_token", {
-//       httpOnly: true,
-//       secure: process.env.NODE_ENV === "production",
-//       maxAge: 60 * 60 * 24, // 24 hours
-//       path: "/",
-//     });
+    if (isExist) {
+      console.log("User already exists");
+      return null;
+    }
 
-//     redirect("/add-item"); // Send them straight to the inventory portal
-//   } else {
-//     return { error: "ACCESS DENIED: INVALID CREDENTIALS" };
-//   }
-// }
+    // 3. Hash Password (Fixed your parenthesis syntax)
+    const hashedPassword = await bcrypt.hash(password, 14);
 
-// export async function logoutAction() {
-//   const cookieStore = await cookies();
-//   cookieStore.delete("auth_token");
-//   redirect("/login");
-// }
-export const postUser=async(payload)=>{
-  const {email,password,name}=payload
+    const newUser = {
+      providerId: "credentials",
+      name,
+      email,
+      password: hashedPassword,
+      role: "user",
+    };
 
-  if (!email || !password) return null;
-  const isExist = await dbConnect(Collection.USERS).findOne({ email });
-  if (isExist) {
+    // 4. Insert
+    const result = await collection.insertOne(newUser);
+
+    if (result.acknowledged) {
+      return {
+        ...result,
+        insertedId: result.insertedId.toString(),
+      };
+    }
+  } catch (error) {
+    console.error("DB Error in postUser:", error);
     return null;
   }
-  const newUser = {
-    providerId: "credentials",
-    name,
-    email,
-    password: (await bcrypt.hash) * (password, 14),
-    role: "user",
-  };
-  const result=await dbConnect(Collection.USERS).insertOne(newUser)
-  if(result.acknowledged){
-    return{
-      ...result , insertedId:result.insertedId.toString()
+};
+
+export const loginUser = async (payload) => {
+  const { email, password } = payload;
+  if (!email || !password) return null;
+
+  try {
+    const collection = await dbConnect("users"); // Use "users" here too
+    const user = await collection.findOne({ email });
+
+    if (!user) return null;
+
+    const isMatched = await bcrypt.compare(password, user.password);
+
+    if (isMatched) {
+      
+      return {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      };
+    } else {
+      return null;
     }
+  } catch (error) {
+    console.error("DB Error in loginUser:", error);
+    return null;
   }
-
-}
-
+};

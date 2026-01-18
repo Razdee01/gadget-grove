@@ -30,7 +30,7 @@ export async function getFeaturedProducts() {
   }
 }
 
-// 3. Get Single Product 
+// 3. Get Single Product
 export async function getSingleProduct(id) {
   try {
     // 1. Validate if 'id' exists and is exactly 24 hex characters
@@ -57,22 +57,32 @@ export async function getSingleProduct(id) {
 // 4. Add New Product
 export async function addProduct(formData) {
   try {
-    const collection = dbConnect("items");
+    const collection = await dbConnect("items"); // Added await if dbConnect returns a promise
+
     const newItem = {
       name: formData.get("name"),
       price: parseFloat(formData.get("price")),
       description: formData.get("description"),
       image: formData.get("image"),
       category: formData.get("category"),
+      // FIXED: Changed '=' to ':' and added a fallback empty string
+      features: (formData.get("features") || "")
+        .split(",")
+        .map((f) => f.trim())
+        .filter((f) => f !== ""),
     };
 
     const result = await collection.insertOne(newItem);
 
-
+    // This clears the cache so the new item shows up on the list page immediately
     revalidatePath("/items");
-    return { success: true, id: result.insertedId.toString() };
+
+    return {
+      success: true,
+      id: result.insertedId.toString(),
+    };
   } catch (error) {
     console.error("Error adding product:", error);
-    return { success: false };
+    return { success: false, error: "DATABASE_ERROR" };
   }
 }
